@@ -172,7 +172,8 @@ export class Downloader {
         logger.debug(`# ${sectionHeader} #`);
 
         const subsections = await volume.$$eval("li", (lis) => lis.map((li) => {
-          const a = li.children[0] as HTMLAnchorElement;
+          const h2 = li.children[0] as HTMLHeadingElement;
+          const a = h2.children[0] as HTMLAnchorElement;
           return {
             href: a.href,
             title: a.textContent,
