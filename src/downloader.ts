@@ -197,13 +197,31 @@ export class Downloader {
     }
   }
 
-  private async chapter(subsectionInfo: ICatalogSubsectionInformation): Promise<string> {
+  // for old reader style which now resides under read.qidian.com
+  private async old_chapter(subsectionInfo: ICatalogSubsectionInformation): Promise<string> {
     const page = await this.browser.newPage();
     try {
       logger.debug(`Start downloading ${subsectionInfo.title} from ${subsectionInfo.href}`);
       await promiseRetry((retry) => page.goto(subsectionInfo.href).catch(retry));
 
       const content = await page.$eval("div.read-content", (div) => div.innerHTML);
+      logger.debug(`Finish downloading ${subsectionInfo.title}`);
+
+      return content;
+    } catch (error) {
+      logger.error(`Failed to download ${subsectionInfo.title}`, error);
+    } finally {
+      await page.close();
+    }
+  }
+
+  private async chapter(subsectionInfo: ICatalogSubsectionInformation): Promise<string> {
+    const page = await this.browser.newPage();
+    try {
+      logger.debug(`Start downloading ${subsectionInfo.title} from ${subsectionInfo.href}`);
+      await promiseRetry((retry) => page.goto(subsectionInfo.href).catch(retry));
+
+      const content = await page.$eval("main.content", (div) => div.innerHTML);
       logger.debug(`Finish downloading ${subsectionInfo.title}`);
 
       return content;
