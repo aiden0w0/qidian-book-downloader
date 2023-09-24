@@ -9,7 +9,6 @@ import * as playwright from "playwright-core";
 import { Downloader, IArticleInformation } from "./downloader";
 
 export class RunAction extends CommandLineAction {
-  private chrome: CommandLineStringParameter;
   private noChromeHeadless: CommandLineFlagParameter;
   private username: CommandLineStringParameter;
   private password: CommandLineStringParameter;
