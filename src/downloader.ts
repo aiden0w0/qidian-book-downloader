@@ -85,7 +85,7 @@ export class Downloader {
   }
 
   private delay(ms: number) {
-    return new Promise( (resolve) => setTimeout(resolve, ms) );
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private acquire(count: number): Promise<void> {
