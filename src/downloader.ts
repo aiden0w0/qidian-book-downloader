@@ -6,6 +6,9 @@ import { loggerFactory } from "./logging";
 const logger = loggerFactory.getLogger("downloader");
 
 export interface IDownloaderOptions {
+  readonly useCookieLogin: boolean;
+  readonly ywguid: string;
+  readonly ywkey: string;
   readonly username: string;
   readonly password: string;
   readonly bookId: number;
@@ -46,7 +49,11 @@ export class Downloader {
     logger.info(`Start downloading book with id ${this.options.bookId}.`);
 
     logger.info("Start login.");
-    await this.login();
+    const status = await this.login();
+    if (!status) {
+      logger.info("Login failed.");
+      return;
+    }
     logger.info("Login succeed.");
 
     logger.info(`Start downloading catalog information for ${this.options.bookId}`);
@@ -87,19 +94,58 @@ export class Downloader {
     });
   }
 
-  private async login() {
-    const page = await this.browser.newPage();
-    try {
-      await page.goto("https://passport.qidian.com/");
-      await page.fill("#username", this.options.username);
-      await page.fill("#password", this.options.password);
-      await Promise.all([
-        page.waitForNavigation(),
-        page.click(".login-button"),
-      ]);
-    } finally {
-      await page.close();
+  private async login(): Promise<boolean> {
+    let result = true;
+
+    if (this.options.useCookieLogin) {
+      const context = await this.browser.newContext();
+
+      context.addCookies(
+        [{
+          name: "ywguid",
+          value: this.options.ywguid,
+          domain: ".qidian.com",
+          path: "/",
+          httpOnly: false,
+          secure: true
+        }, {
+          name: "ywkey",
+          value: this.options.ywkey,
+          domain: ".qidian.com",
+          path: "/",
+          httpOnly: false,
+          secure: true
+        }]
+      );
+
+      const page = await context.newPage();
+      try {
+        await page.goto("https://my.qidian.com/");
+        const currentURL = page.url();
+        if (currentURL !== "https://my.qidian.com/") {
+          logger.info('my.qidian.com was redirected to another page, cookie invalid.');
+          result = false;
+        }
+      } finally {
+        await page.close();
+      }
+    } else {
+      const page = await this.browser.newPage();
+      try {
+        await page.goto("https://passport.qidian.com/");
+        await page.fill("#username", this.options.username);
+        await page.fill("#password", this.options.password);
+        await page.click("#agree5");
+        await Promise.all([
+          page.waitForNavigation(),
+          page.click(".login-button"),
+        ]);
+      } finally {
+        await page.close();
+      }
     }
+
+    return result;
   }
 
   private async catalog(): Promise<ICatalogInformation> {

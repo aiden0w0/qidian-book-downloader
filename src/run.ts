@@ -10,6 +10,9 @@ import { Downloader, IArticleInformation } from "./downloader";
 
 export class RunAction extends CommandLineAction {
   private noChromeHeadless: CommandLineFlagParameter;
+  private useCookieLogin: CommandLineFlagParameter;
+  private ywguid: CommandLineStringParameter;
+  private ywkey: CommandLineStringParameter;
   private username: CommandLineStringParameter;
   private password: CommandLineStringParameter;
   private bookId: CommandLineIntegerParameter;
@@ -38,6 +41,21 @@ export class RunAction extends CommandLineAction {
       description: "Launch Chrome/Chromium browser not in headless mode.",
       parameterLongName: "--no-chrome-headless",
     });
+    this.useCookieLogin = this.defineFlagParameter({
+      description: "Use cookie to login.",
+      parameterLongName: "--cookie",
+      parameterShortName: "-c",
+    });
+    this.ywguid = this.defineStringParameter({
+      argumentName: "YWGUID",
+      description: "The ywguid field.",
+      parameterLongName: "--ywguid",
+    });
+    this.ywkey = this.defineStringParameter({
+      argumentName: "YWKEY",
+      description: "The ywkey field.",
+      parameterLongName: "--ywkey",
+    });
     this.username = this.defineStringParameter({
       argumentName: "USERNAME",
       description: "The username of your account in QiDian.",
@@ -60,7 +78,10 @@ export class RunAction extends CommandLineAction {
 
   private async run(browser: playwright.Browser) {
     const downloader = new Downloader(browser, {
+      useCookieLogin: this.useCookieLogin.value,
       bookId: this.bookId.value,
+      ywguid: this.ywguid.value,
+      ywkey: this.ywkey.value,
       password: this.password.value,
       username: this.username.value,
     });
