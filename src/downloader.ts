@@ -221,7 +221,15 @@ export class Downloader {
       logger.debug(`Start downloading ${subsectionInfo.title} from ${subsectionInfo.href}`);
       await promiseRetry((retry) => page.goto(subsectionInfo.href).catch(retry));
 
-      const content = await page.$eval("main.content", (div) => div.innerHTML);
+      // remove review count
+      await page.evaluate(() => {
+        const elementsToRemove = document.querySelectorAll('.review');
+        elementsToRemove.forEach((element) => {
+          element.remove();
+        });
+      });
+
+      const content = await page.$eval("main.content", (main: HTMLDivElement) => main.innerHTML);
       logger.debug(`Finish downloading ${subsectionInfo.title}`);
 
       return content;
